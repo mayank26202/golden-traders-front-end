@@ -54,6 +54,7 @@ export function Expenses() {
   const [create] = useCreateExpenseMutation();
   const [update] = useUpdateExpenseMutation();
   const [remove] = useDeleteExpenseMutation();
+  const cards = (data as typeof data & { cards?: Record<string, any> })?.cards;
   const allRows = data?.data || [];
   const rows = typeFilter
     ? allRows.filter((r: any) => r.type === typeFilter)
@@ -77,9 +78,9 @@ export function Expenses() {
         )}
       </PageHeader>
 
-      {data?.cards && Object.keys(data.cards).length > 0 && (
+      {cards && Object.keys(cards).length > 0 && (
         <div className="mb-4 grid gap-3 md:grid-cols-4">
-          {Object.entries(data.cards).map(([k, v]: [string, any]) => (
+          {Object.entries(cards).map(([k, v]: [string, any]) => (
             <div className="panel border-l-4 border-sky" key={k}>
               <div className="text-xs font-bold uppercase text-slate-500">
                 {k}

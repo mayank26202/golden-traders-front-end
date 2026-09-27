@@ -27,7 +27,7 @@ export function Customers() {
   const { data } = usePartyLedgerQuery(`?type=${type}&name=${encodeURIComponent(name)}&from=${from}&to=${to}`, { skip: !name });
   
   const allRows = data?.data || [];
-  const cards = data?.cards || {};
+  const cards = (data as { data: any[]; cards?: Record<string, number> } | undefined)?.cards || {};
   const totalPages = Math.max(1, Math.ceil(allRows.length / limit));
   const rows = allRows.slice((page - 1) * limit, page * limit);
 
