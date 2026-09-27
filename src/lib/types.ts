@@ -1,0 +1,9 @@
+export type PaymentMethod = "none" | "cash" | "upi" | "bank_to_bank" | "SK" | "company_account";
+export type Payment = { status: "pending" | "done"; method: PaymentMethod; paidAt?: string };
+export type User = { _id: string; name: string; email: string; role: "admin" | "user"; permissions: string[]; lastLoginAt?: string; active: boolean };
+export type SupplierEntry = { _id: string; supplierName: string; kgWeight: number; ratePerKg: number; totalAmount: number; totalIn?: number; totalOut?: number; stockBalance?: number; supplyDate: string; payment: Payment; createdAt: string };
+export type SaleEntry = { _id: string; customerName: string; totalKg: number; rateOfSale: number; totalAmount: number; saleDate: string; createdAt: string };
+export type Expense = { _id: string; type: "vehicle" | "emi" | "salary"; driverName?: string; vehicleNumber?: string; employeeName?: string; fuelType?: "diesel" | "petrol" | "cng"; foodCost: number; petrolCost: number; miscellaneousCost: number; salaryAmount: number; bonusAmount: number; title?: string; fixedAmount: number; recurrence: string; expenseDate: string; totalAmount?: number };
+export type CustomerPayment = { _id: string; customerName: string; amount: number; method: "cash" | "upi" | "bank" | "SK" | "golden_traders_bank"; paymentDate: string; paymentTime: string; note?: string; createdAt: string };
+export type CashDeposit = { _id: string; amount: number; bankAccount: "SK" | "golden_traders_bank"; depositDate: string; depositTime: string; note?: string; createdAt: string };
+export type Vehicle = { _id: string; vehicleNumber: string; model: string; driverName: string; driverPhone: string; active: boolean };
