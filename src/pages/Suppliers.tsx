@@ -14,7 +14,7 @@ const money = (value: number) => `Rs. ${Number(value || 0).toLocaleString()}`;
 
 export function Suppliers() {
   const today = new Date().toISOString().slice(0, 10);
-  const [q, setQ] = useState(new URLSearchParams(`page=1&limit=20&from=${today}&to=${today}`));
+  const [q, setQ] = useState(new URLSearchParams("page=1&limit=20"));
   const [editing, setEditing] = useState<SupplierEntry | null | undefined>();
   const user = useSelector((s: RootState) => s.auth.user);
   const { data } = useSuppliersQuery(`?${q}`);

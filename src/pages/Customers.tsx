@@ -14,12 +14,12 @@ export function Customers() {
   const todayStr = new Date().toISOString().slice(0, 10);
   
   // Draft state for date inputs
-  const [draftFrom, setDraftFrom] = useState(todayStr);
-  const [draftTo, setDraftTo] = useState(todayStr);
+  const [draftFrom, setDraftFrom] = useState("");
+  const [draftTo, setDraftTo] = useState("");
   
   // Actual applied state
-  const [from, setFrom] = useState(todayStr);
-  const [to, setTo] = useState(todayStr);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [page, setPage] = useState(1);
   const limit = 20;
 

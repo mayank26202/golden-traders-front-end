@@ -15,6 +15,7 @@ import { PageHeader } from "../components/Layout";
 import { Filters } from "../components/Filters";
 import { Modal } from "../components/Modal";
 import { Field, TextInput, parseAmount } from "../components/FormField";
+import { BulkSaleForm } from "../components/BulkSaleForm";
 import { can, formatDate, toDateInput } from "../lib/auth";
 import type { RootState } from "../app/store";
 import type { SaleEntry } from "../lib/types";
@@ -23,6 +24,7 @@ const money = (value: number) => `Rs. ${Number(value || 0).toLocaleString()}`;
 
 export function Sales() {
   const [editing, setEditing] = useState<SaleEntry | null | undefined>();
+  const [bulkOpen, setBulkOpen] = useState(false);
   const user = useSelector((s: RootState) => s.auth.user);
   const today = new Date().toISOString().slice(0, 10);
   const [q, setQ] = useState(
@@ -40,6 +42,12 @@ export function Sales() {
       `${API_URL.replace("/api", "")}/api/sales/${id}/invoice?token=${token}`,
       "_blank",
     );
+  const saveBulk = async (entries: any[]) => {
+    for (const body of entries) {
+      await saveName({ name: body.customerName, type: "customer" }).unwrap();
+      await create(body).unwrap();
+    }
+  };
   const save = (body: any) =>
     saveName({ name: body.customerName, type: "customer" })
       .unwrap()
@@ -67,7 +75,7 @@ export function Sales() {
           can(user, "sales:create") && (
             <button
               className="btn btn-primary"
-              onClick={() => setEditing(null)}
+              onClick={() => setBulkOpen(true)}
             >
               <Plus size={16} /> Create
             </button>
@@ -181,6 +189,7 @@ export function Sales() {
           onSave={save}
         />
       )}
+    {bulkOpen && <BulkSaleForm onClose={() => setBulkOpen(false)} onSaveBulk={saveBulk} />}
     </>
   );
 }
