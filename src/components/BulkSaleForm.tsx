@@ -6,7 +6,7 @@ import { useAvailableSuppliersQuery, usePartyNamesQuery } from "../app/api";
 import { toDateInput } from "../lib/auth";
 
 export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onSaveBulk: (entries: any[]) => Promise<void> }) {
-  const [saleDate, setSaleDate] = useState(toDateInput(new Date()));
+  const [saleDate, setSaleDate] = useState(toDateInput(new Date().toISOString()));
   const [supplierId, setSupplierId] = useState("");
   const [supplierName, setSupplierName] = useState("");
   const [rows, setRows] = useState<any[]>([{ id: 1, customerName: "", kg: "", rate: "" }]);
