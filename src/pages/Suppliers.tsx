@@ -9,13 +9,18 @@ import { Field, TextInput, parseAmount } from "../components/FormField";
 import { can, formatDate, toDateInput } from "../lib/auth";
 import type { RootState } from "../app/store";
 import type { SupplierEntry } from "../lib/types";
+import { BulkSupplierForm } from "../components/BulkSupplierForm";
+import { API_URL } from "../app/api";
+
+
 
 const money = (value: number) => `Rs. ${Number(value || 0).toLocaleString()}`;
 
 export function Suppliers() {
   const today = new Date().toISOString().slice(0, 10);
-  const [q, setQ] = useState(new URLSearchParams("page=1&limit=20"));
+  const [q, setQ] = useState(new URLSearchParams());
   const [editing, setEditing] = useState<SupplierEntry | null | undefined>();
+  const [bulkOpen, setBulkOpen] = useState(false);
   const user = useSelector((s: RootState) => s.auth.user);
   const { data } = useSuppliersQuery(`?${q}`);
   const { data: history } = useSupplierHistoryQuery();
@@ -37,7 +42,7 @@ export function Suppliers() {
   return (
     <>
       <PageHeader title="Suppliers" />
-      <Filters query={q} setQuery={(next) => { next.set("page", "1"); next.set("limit", "20"); setQ(next); }} rows={rows} name="suppliers" create={can(user, "suppliers:create") && <button className="btn btn-primary" onClick={() => setEditing(null)}><Plus size={16} /> Create</button>} />
+      <Filters query={q} setQuery={(next) => { next.set("page", "1"); next.set("limit", "20"); setQ(next); }} rows={rows} name="suppliers" create={can(user, "suppliers:create") && <button className="btn btn-primary" onClick={() => setBulkOpen(true)}><Plus size={16} /> Create</button>} />
       <div className="panel">
         <div className="max-h-[520px] overflow-auto">
           <table className="w-full min-w-[1050px]">
@@ -52,6 +57,21 @@ export function Suppliers() {
         <table className="w-full min-w-[760px]"><thead><tr>{["Supplier","Entries","Total Kg","Total Amount","Paid","Pending"].map((h) => <th className="th" key={h}>{h}</th>)}</tr></thead><tbody>{(history?.data || []).map((h) => <tr key={h._id}><td className="td font-semibold">{h._id}</td><td className="td">{h.entryCount}</td><td className="td">{h.totalKg}</td><td className="td">{money(h.totalAmount)}</td><td className="td text-mint">{money(h.paidAmount)}</td><td className="td text-tomato">{money(h.pendingAmount)}</td></tr>)}</tbody></table>
       </div>
       {editing !== undefined && <SupplierForm entry={editing || undefined} names={savedNames?.data || []} onClose={() => setEditing(undefined)} onSave={save} />}
+      {bulkOpen && (
+        <BulkSupplierForm
+          onClose={() => setBulkOpen(false)}
+          onSaveBulk={async (entries) => {
+            const token = localStorage.getItem("token");
+            await fetch(`${API_URL}/suppliers/bulk`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+              body: JSON.stringify({ entries })
+            });
+            entries.forEach(b => saveName({ name: b.supplierName, type: "supplier" }).catch(() => {}));
+            setQ(new URLSearchParams(q.toString()));
+          }}
+        />
+      )}
     </>
   );
 }

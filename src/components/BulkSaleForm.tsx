@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { Modal } from "./Modal";
-import { Field, TextInput, parseAmount } from "./FormField";
+import { Field, TextInput } from "./FormField";
 import { useAvailableSuppliersQuery, usePartyNamesQuery } from "../app/api";
 import { toDateInput } from "../lib/auth";
 
@@ -17,14 +17,25 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
   const { data: available } = useAvailableSuppliersQuery(`?date=${saleDate}`, { skip: !saleDate });
 
   const availableSupplier = available?.data?.find((s: any) => s.supplierId === supplierId);
-  const totalKgSold = rows.reduce((sum, r) => sum + (Number(r.kg) || 0), 0);
-  const totalAmount = rows.reduce((sum, r) => sum + ((Number(r.kg) || 0) * (Number(r.rate) || 0)), 0);
-  const remainingKg = (availableSupplier?.stockBalance ?? availableSupplier?.totalIn ?? 0) - totalKgSold;
+  
+  // Floating point fix: multiply by 100, round, divide by 100
+  const totalKgSold = Math.round(rows.reduce((sum, r) => sum + (Number(r.kg) || 0), 0) * 100) / 100;
+  const totalAmount = Math.round(rows.reduce((sum, r) => sum + ((Number(r.kg) || 0) * (Number(r.rate) || 0)), 0) * 100) / 100;
+  
+  const startingStock = availableSupplier?.stockBalance ?? availableSupplier?.totalIn ?? 0;
+  const remainingKg = Math.round((startingStock - totalKgSold) * 100) / 100;
 
   const handleAdd = () => setRows([...rows, { id: Date.now(), customerName: "", kg: "", rate: "" }]);
   const handleRemove = (id: number) => setRows(rows.filter(r => r.id !== id));
   const updateRow = (id: number, field: string, value: string) => {
     setRows(rows.map(r => r.id === id ? { ...r, [field]: value } : r));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, id: number) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAdd();
+    }
   };
 
   const handleNext = () => {
@@ -65,7 +76,7 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
                 <td className="p-2 font-semibold">{r.customerName}</td>
                 <td className="p-2 text-center">{r.kg}</td>
                 <td className="p-2 text-center">{r.rate}</td>
-                <td className="p-2 text-right">Rs. {(Number(r.kg) * Number(r.rate)).toLocaleString()}</td>
+                <td className="p-2 text-right">Rs. {Math.round(Number(r.kg) * Number(r.rate)).toLocaleString()}</td>
               </tr>
             ))}
             <tr className="border-t font-black">
@@ -108,15 +119,15 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
         {rows.map((r, i) => (
           <div key={r.id} className="grid grid-cols-[1fr_80px_80px_40px] gap-2 mb-2 items-end">
             <Field label={i === 0 ? "Customer Name" : ""}>
-              <TextInput list="cust-list" placeholder="Customer" value={r.customerName} onChange={e => updateRow(r.id, "customerName", e.target.value)} />
+              <TextInput list="cust-list" placeholder="Customer" value={r.customerName} onChange={e => updateRow(r.id, "customerName", e.target.value)} onKeyDown={(e) => handleKeyDown(e, r.id)} />
             </Field>
             <Field label={i === 0 ? "Kg" : ""}>
-              <TextInput inputMode="decimal" placeholder="Kg" value={r.kg} onChange={e => updateRow(r.id, "kg", e.target.value)} />
+              <TextInput inputMode="decimal" placeholder="Kg" value={r.kg} onChange={e => updateRow(r.id, "kg", e.target.value)} onKeyDown={(e) => handleKeyDown(e, r.id)} />
             </Field>
             <Field label={i === 0 ? "Rate" : ""}>
-              <TextInput inputMode="decimal" placeholder="Rate" value={r.rate} onChange={e => updateRow(r.id, "rate", e.target.value)} />
+              <TextInput inputMode="decimal" placeholder="Rate" value={r.rate} onChange={e => updateRow(r.id, "rate", e.target.value)} onKeyDown={(e) => handleKeyDown(e, r.id)} />
             </Field>
-            <button className="h-11 w-full flex items-center justify-center text-red-500 hover:bg-red-50 rounded" onClick={() => handleRemove(r.id)}><Trash2 size={16} /></button>
+            <button type="button" className="h-11 w-full flex items-center justify-center text-red-500 hover:bg-red-50 rounded" onClick={() => handleRemove(r.id)}><Trash2 size={16} /></button>
           </div>
         ))}
         <datalist id="cust-list">{names?.data?.map((n: any) => <option key={n._id} value={n.name} />)}</datalist>

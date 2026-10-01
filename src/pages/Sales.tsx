@@ -26,10 +26,7 @@ export function Sales() {
   const [editing, setEditing] = useState<SaleEntry | null | undefined>();
   const [bulkOpen, setBulkOpen] = useState(false);
   const user = useSelector((s: RootState) => s.auth.user);
-  const today = new Date().toISOString().slice(0, 10);
-  const [q, setQ] = useState(
-    new URLSearchParams(`page=1&limit=20&from=${today}&to=${today}`),
-  );
+  const [q, setQ] = useState(new URLSearchParams("page=1&limit=20"));
   const { data } = useSalesQuery(`?${q}`);
   const [create] = useCreateSaleMutation();
   const [update] = useUpdateSaleMutation();
@@ -43,10 +40,14 @@ export function Sales() {
       "_blank",
     );
   const saveBulk = async (entries: any[]) => {
-    for (const body of entries) {
-      await saveName({ name: body.customerName, type: "customer" }).unwrap();
-      await create(body).unwrap();
-    }
+    const tok = localStorage.getItem("token");
+    await fetch(`${API_URL}/sales/bulk`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + tok },
+      body: JSON.stringify({ entries })
+    });
+    entries.forEach(b => saveName({ name: b.customerName, type: "customer" }).catch(() => {}));
+    setQ(new URLSearchParams(q.toString()));
   };
   const save = (body: any) =>
     saveName({ name: body.customerName, type: "customer" })
@@ -62,6 +63,27 @@ export function Sales() {
   return (
     <>
       <PageHeader title="Sales" />
+      
+      <div className="mb-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        {data?.cards && (
+          <div className="panel border-l-4 border-mint">
+            <div className="text-xs font-bold uppercase text-slate-500">Overall</div>
+            <div className="mt-2 font-black">
+              <div className="text-lg">Sale: {data.cards.overall.totalSale} kg</div>
+              <div className={data.cards.overall.stockLeft < 0 ? 'text-red-500' : 'text-slate-500'}>Stock Left: {data.cards.overall.stockLeft} kg</div>
+            </div>
+          </div>
+        )}
+        {data?.cards?.suppliers.map((s: any) => (
+          <div className="panel border-l-4 border-sky-400" key={s.supplierName}>
+            <div className="text-xs font-bold uppercase text-slate-500 truncate" title={s.supplierName}>{s.supplierName}</div>
+            <div className="mt-2 font-black">
+              <div className="text-lg">Sale: {s.totalSale} kg</div>
+              <div className={s.stockLeft < 0 ? 'text-red-500' : 'text-slate-500'}>Stock Left: {s.stockLeft} kg</div>
+            </div>
+          </div>
+        ))}
+      </div>
       <Filters
         query={q}
         setQuery={(next) => {

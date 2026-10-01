@@ -28,7 +28,8 @@ import {
 import { can, formatDate, toDateInput } from "../lib/auth";
 import type { RootState } from "../app/store";
 import type { CashDeposit, CustomerPayment } from "../lib/types";
-import {BulkPaymentForm} from "../components/BulkPaymentForm";
+import { BulkPaymentForm } from "../components/BulkPaymentForm";
+import { API_URL } from "../app/api";
 
 type PaymentFormState = {
   customerName: string;
@@ -68,9 +69,7 @@ function buildNameOptions(list: NameEntry[] = [], currentValue?: string) {
 }
 
 export function Payments() {
-  const [q, setQ] = useState(
-    () => new URLSearchParams(`?from=${today()}&to=${today()}`),
-  );
+  const [q, setQ] = useState(() => new URLSearchParams());
 
   const [paymentEntry, setPaymentEntry] = useState<
     CustomerPayment | null | undefined
@@ -452,7 +451,6 @@ export function Payments() {
       </div>
       {/* ================= END PARTITION: Bank Deposits ================= */}
 
-      {/* Customer Payment Modal */}
       {paymentEntry !== undefined && (
         paymentEntry ? (
           <PaymentForm
@@ -468,10 +466,14 @@ export function Payments() {
           <BulkPaymentForm
             onClose={() => setPaymentEntry(undefined)}
             onSaveBulk={async (entries) => {
-              await Promise.all(
-                entries.map((body) => createPayment(body).unwrap()),
-              );
+              const token = localStorage.getItem("token");
+              await fetch(`${API_URL}/payments/bulk`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                body: JSON.stringify({ entries })
+              });
               setPaymentEntry(undefined);
+              setQ(new URLSearchParams(q.toString()));
             }}
           />
         )
