@@ -64,7 +64,7 @@ export function Sales() {
     <>
       <PageHeader title="Sales" />
       
-      {q.get("from") && q.get("to") && q.get("from") === q.get("to") && (
+      {(q.get("from") || q.get("to")) && (
         <div className="mb-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           {(data as any)?.cards && (
             <div className="panel border-l-4 border-mint">

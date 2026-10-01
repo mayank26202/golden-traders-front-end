@@ -44,8 +44,8 @@ export function Expenses() {
   const { data: customerNames } = usePartyNamesQuery("?type=customer");
   const { data: supplierNames } = usePartyNamesQuery("?type=supplier");
 
-  console.log("customerNames", customerNames);
-  console.log("supplierNames", supplierNames);
+  // console.log("customerNames", customerNames);
+  // console.log("supplierNames", supplierNames);
   const { data } = useExpensesQuery(`?${q}`);
   const { data: history } = useExpenseHistoryQuery();
   const { data: vehicles } = useVehiclesQuery(undefined, {
