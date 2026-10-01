@@ -64,26 +64,28 @@ export function Sales() {
     <>
       <PageHeader title="Sales" />
       
-      <div className="mb-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-        {(data as any)?.cards && (
-          <div className="panel border-l-4 border-mint">
-            <div className="text-xs font-bold uppercase text-slate-500">Overall</div>
-            <div className="mt-2 font-black">
-              <div className="text-lg">Sale: {(data as any).cards.overall.totalSale} kg</div>
-              <div className={(data as any).cards.overall.stockLeft < 0 ? 'text-red-500' : 'text-slate-500'}>Stock Left: {(data as any).cards.overall.stockLeft} kg</div>
+      {q.get("from") && q.get("to") && q.get("from") === q.get("to") && (
+        <div className="mb-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          {(data as any)?.cards && (
+            <div className="panel border-l-4 border-mint">
+              <div className="text-xs font-bold uppercase text-slate-500">Overall</div>
+              <div className="mt-2 font-black">
+                <div className="text-lg">Sale: {(data as any).cards.overall.totalSale} kg</div>
+                <div className={(data as any).cards.overall.stockLeft < 0 ? 'text-red-500' : 'text-slate-500'}>Stock Left: {(data as any).cards.overall.stockLeft} kg</div>
+              </div>
             </div>
-          </div>
-        )}
-        {(data as any)?.cards?.suppliers.map((s: any) => (
-          <div className="panel border-l-4 border-sky-400" key={s.supplierName}>
-            <div className="text-xs font-bold uppercase text-slate-500 truncate" title={s.supplierName}>{s.supplierName}</div>
-            <div className="mt-2 font-black">
-              <div className="text-lg">Sale: {s.totalSale} kg</div>
-              <div className={s.stockLeft < 0 ? 'text-red-500' : 'text-slate-500'}>Stock Left: {s.stockLeft} kg</div>
+          )}
+          {(data as any)?.cards?.suppliers.map((s: any) => (
+            <div className="panel border-l-4 border-sky-400" key={s.supplierName}>
+              <div className="text-xs font-bold uppercase text-slate-500 truncate" title={s.supplierName}>{s.supplierName}</div>
+              <div className="mt-2 font-black">
+                <div className="text-lg">Sale: {s.totalSale} kg</div>
+                <div className={s.stockLeft < 0 ? 'text-red-500' : 'text-slate-500'}>Stock Left: {s.stockLeft} kg</div>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
       <Filters
         query={q}
         setQuery={(next) => {
