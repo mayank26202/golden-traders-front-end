@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { weightResult } from "../lib/weight";
+import { useState } from "react";
 import { Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { Modal } from "./Modal";
 import { Field, TextInput } from "./FormField";
@@ -39,7 +40,7 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
   };
 
   const handleNext = () => {
-    if (!supplierId || rows.some(r => !r.customerName || !r.kg)) return alert("Please fill all required fields");
+    if (!saleDate || !supplierId || !rows.length || rows.some(r => !r.customerName || !r.kg)) return alert("Please fill all required fields");
     setPreview(true);
   };
 
@@ -53,9 +54,14 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
       supplierId,
       supplierName
     }));
-    await onSaveBulk(entries);
-    setIsSaving(false);
-    onClose();
+    try {
+      await onSaveBulk(entries);
+      onClose();
+    } catch {
+      alert("Could not save entries. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (preview) {
@@ -64,9 +70,9 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
         <div className="mb-4 text-sm">
           <p><strong>Date:</strong> {saleDate}</p>
           <p><strong>Supplier:</strong> {supplierName}</p>
-          <p className={remainingKg < 0 ? "text-red-500 font-bold" : ""}><strong>Remaining Stock:</strong> {remainingKg} kg</p>
+          <p className={remainingKg < 0 ? "text-emerald-600 font-bold" : ""}><strong>Remaining Stock:</strong> {remainingKg} kg ({weightResult(remainingKg)})</p>
         </div>
-        <table className="w-full text-sm mb-4">
+        <div className="max-h-[45dvh] overflow-auto overscroll-contain mb-4"><table className="w-full text-sm">
           <thead className="bg-slate-100">
             <tr><th className="p-2 text-left">Customer</th><th className="p-2">Kg</th><th className="p-2">Rate</th><th className="p-2 text-right">Total</th></tr>
           </thead>
@@ -86,8 +92,8 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
               <td className="p-2 text-right">Rs. {totalAmount.toLocaleString()}</td>
             </tr>
           </tbody>
-        </table>
-        <div className="flex gap-2 justify-end">
+        </table></div>
+        <div className="sticky bottom-0 flex flex-wrap gap-2 justify-end bg-white py-2">
           <button className="btn bg-slate-200" onClick={() => setPreview(false)} disabled={isSaving}>Edit</button>
           <button className="btn btn-primary" onClick={handleSave} disabled={isSaving}><CheckCircle2 size={16}/> {isSaving ? "Saving..." : "Confirm & Save All"}</button>
         </div>
@@ -115,7 +121,7 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
         </Field>
       </div>
 
-      <div className="max-h-[300px] overflow-auto mb-4 border rounded p-2 bg-slate-50">
+      <div className="max-h-[40dvh] overflow-auto overscroll-contain mb-4 border rounded p-2 bg-slate-50">
         {rows.map((r, i) => (
           <div key={r.id} className="grid grid-cols-[1fr_80px_80px_40px] gap-2 mb-2 items-end">
             <Field label={i === 0 ? "Customer Name" : ""}>
@@ -134,9 +140,9 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
         <button className="btn btn-sky w-full mt-2" onClick={handleAdd}><Plus size={16}/> Add Customer Entry</button>
       </div>
 
-      <div className="flex justify-between items-center">
+      <div className="sticky bottom-0 flex flex-wrap gap-2 justify-between items-center bg-white py-2">
         <div className="text-sm font-semibold">
-          Total Kg: {totalKgSold} <span className={remainingKg < 0 ? "text-red-500" : "text-slate-500"}>(Left: {remainingKg})</span>
+          Total Kg: {totalKgSold} <span className={remainingKg < 0 ? "text-emerald-600" : "text-slate-500"}>(Left: {remainingKg} kg; {weightResult(remainingKg)})</span>
         </div>
         <button className="btn btn-primary" onClick={handleNext}>Preview Entries</button>
       </div>

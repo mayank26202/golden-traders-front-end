@@ -1,3 +1,6 @@
+import { weightResult } from "../lib/weight";
+import { store } from "../app/store";
+import { api } from "../app/api";
 import { useState } from "react";
 import { Edit, FileDown, Plus, Trash2 } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -41,13 +44,9 @@ export function Sales() {
     );
   const saveBulk = async (entries: any[]) => {
     const tok = localStorage.getItem("token");
-    await fetch(`${API_URL}/sales/bulk`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + tok },
-      body: JSON.stringify({ entries })
-    });
+    await store.dispatch(api.endpoints.bulkSales.initiate(entries)).unwrap();
     entries.forEach(b => saveName({ name: b.customerName, type: "customer" }).catch(() => {}));
-    setQ(new URLSearchParams(q.toString()));
+    setQ(previous => { const next = new URLSearchParams(previous); next.set("page", "1"); return next; });
   };
   const save = (body: any) =>
     saveName({ name: body.customerName, type: "customer" })
@@ -64,14 +63,14 @@ export function Sales() {
     <>
       <PageHeader title="Sales" />
       
-      {(q.get("from") || q.get("to")) && (
+      {(
         <div className="mb-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           {(data as any)?.cards && (
             <div className="panel border-l-4 border-mint">
               <div className="text-xs font-bold uppercase text-slate-500">Overall</div>
               <div className="mt-2 font-black">
                 <div className="text-lg">Sale: {(data as any).cards.overall.totalSale} kg</div>
-                <div className={(data as any).cards.overall.stockLeft < 0 ? 'text-red-500' : 'text-slate-500'}>Stock Left: {(data as any).cards.overall.stockLeft} kg</div>
+                <div className={(data as any).cards.overall.stockLeft < 0 ? 'text-emerald-600' : 'text-red-500'}>{weightResult((data as any).cards.overall.stockLeft)}</div>
               </div>
             </div>
           )}
@@ -80,7 +79,7 @@ export function Sales() {
               <div className="text-xs font-bold uppercase text-slate-500 truncate" title={s.supplierName}>{s.supplierName}</div>
               <div className="mt-2 font-black">
                 <div className="text-lg">Sale: {s.totalSale} kg</div>
-                <div className={s.stockLeft < 0 ? 'text-red-500' : 'text-slate-500'}>Stock Left: {s.stockLeft} kg</div>
+                <div className={s.stockLeft < 0 ? 'text-emerald-600' : 'text-red-500'}>{weightResult(s.stockLeft)}</div>
               </div>
             </div>
           ))}

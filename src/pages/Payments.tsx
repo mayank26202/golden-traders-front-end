@@ -1,3 +1,5 @@
+import { store } from "../app/store";
+import { api } from "../app/api";
 import { useState } from "react";
 import { Edit, Landmark, Plus, Trash2, Wallet } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -467,13 +469,9 @@ export function Payments() {
             onClose={() => setPaymentEntry(undefined)}
             onSaveBulk={async (entries) => {
               const token = localStorage.getItem("token");
-              await fetch(`${API_URL}/payments/bulk`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-                body: JSON.stringify({ entries })
-              });
+              await store.dispatch(api.endpoints.bulkPayments.initiate(entries)).unwrap();
               setPaymentEntry(undefined);
-              setQ(new URLSearchParams(q.toString()));
+              setQ(previous => { const next = new URLSearchParams(previous); next.set("page", "1"); return next; });
             }}
           />
         )

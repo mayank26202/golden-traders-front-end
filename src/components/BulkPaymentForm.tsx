@@ -22,7 +22,7 @@ export function BulkPaymentForm({ onClose, onSaveBulk }: { onClose: () => void, 
   };
 
   const handleNext = () => {
-    if (rows.some(r => !r.customerName || !r.amount)) return alert("Please fill all required fields");
+    if (!rows.length || rows.some(r => !r.customerName || !r.amount)) return alert("Please fill all required fields");
     setPreview(true);
   };
 
@@ -37,9 +37,14 @@ export function BulkPaymentForm({ onClose, onSaveBulk }: { onClose: () => void, 
       paymentTime: time,
       note: r.note.trim()
     }));
-    await onSaveBulk(entries);
-    setIsSaving(false);
-    onClose();
+    try {
+      await onSaveBulk(entries);
+      onClose();
+    } catch {
+      alert("Could not save entries. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (preview) {
@@ -49,7 +54,7 @@ export function BulkPaymentForm({ onClose, onSaveBulk }: { onClose: () => void, 
           <p><strong>Date:</strong> {paymentDate}</p>
           <p><strong>Method:</strong> {method}</p>
         </div>
-        <table className="w-full text-sm mb-4">
+        <div className="max-h-[45dvh] overflow-auto overscroll-contain mb-4"><table className="w-full text-sm">
           <thead className="bg-slate-100">
             <tr><th className="p-2 text-left">Customer</th><th className="p-2">Amount</th><th className="p-2 text-left">Note</th></tr>
           </thead>
@@ -67,8 +72,8 @@ export function BulkPaymentForm({ onClose, onSaveBulk }: { onClose: () => void, 
               <td></td>
             </tr>
           </tbody>
-        </table>
-        <div className="flex gap-2 justify-end">
+        </table></div>
+        <div className="sticky bottom-0 flex flex-wrap gap-2 justify-end bg-white py-2">
           <button className="btn bg-slate-200" onClick={() => setPreview(false)} disabled={isSaving}>Edit</button>
           <button className="btn btn-primary" onClick={handleSave} disabled={isSaving}><CheckCircle2 size={16}/> {isSaving ? "Saving..." : "Confirm & Save All"}</button>
         </div>
@@ -93,7 +98,7 @@ export function BulkPaymentForm({ onClose, onSaveBulk }: { onClose: () => void, 
         </Field>
       </div>
 
-      <div className="max-h-[300px] overflow-auto mb-4 border rounded p-2 bg-slate-50">
+      <div className="max-h-[40dvh] overflow-auto overscroll-contain mb-4 border rounded p-2 bg-slate-50">
         {rows.map((r, i) => (
           <div key={r.id} className="grid grid-cols-[1fr_100px_1fr_40px] gap-2 mb-2 items-end">
             <Field label={i === 0 ? "Customer Name" : ""}>
@@ -112,7 +117,7 @@ export function BulkPaymentForm({ onClose, onSaveBulk }: { onClose: () => void, 
         <button className="btn btn-sky w-full mt-2" onClick={handleAdd}><Plus size={16}/> Add Payment</button>
       </div>
 
-      <div className="flex justify-between items-center">
+      <div className="sticky bottom-0 flex flex-wrap gap-2 justify-between items-center bg-white py-2">
         <div className="text-sm font-semibold">Total Amount: {totalAmount}</div>
         <button className="btn btn-primary" onClick={handleNext}>Preview Payments</button>
       </div>
