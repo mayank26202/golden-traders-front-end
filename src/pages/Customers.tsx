@@ -1,3 +1,4 @@
+import { Dropdown } from "../components/Dropdown";
 import { useState, useEffect } from "react";
 import { Download } from "lucide-react";
 import { PageHeader } from "../components/Layout";
@@ -61,16 +62,16 @@ export function Customers() {
       <PageHeader title="Customer & Supplier History" />
       <div className="panel mb-4 flex flex-wrap gap-3 items-end">
         <label className="grid gap-1.5"><span className="text-xs font-bold uppercase text-slate-500">Type</span>
-          <select className="input" value={type} onChange={(e) => { setType(e.target.value as any); setName(""); }}>
+          <Dropdown className="input" value={type} onChange={(e) => { setType(e.target.value as any); setName(""); }}>
             <option value="customer">Customer</option>
             <option value="supplier">Supplier</option>
-          </select>
+          </Dropdown>
         </label>
         <label className="grid gap-1.5 min-w-[200px]"><span className="text-xs font-bold uppercase text-slate-500">Name</span>
-          <select className="input" value={name} onChange={(e) => setName(e.target.value)}>
+          <Dropdown className="input" value={name} onChange={(e) => setName(e.target.value)}>
             <option value="">Select {type}</option>
             {names?.data.map((n: any) => <option key={n._id} value={n.name}>{n.name}</option>)}
-          </select>
+          </Dropdown>
         </label>
         <label className="grid gap-1.5"><span className="text-xs font-bold uppercase text-slate-500">From</span>
           <input className="input" type="date" value={draftFrom} onChange={(e) => setDraftFrom(e.target.value)} />

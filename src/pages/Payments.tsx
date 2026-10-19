@@ -350,7 +350,7 @@ export function Payments() {
 
       {/* Supplier Payment Modal */}
       {supplierPaymentEntry !== undefined && (
-        <SupplierPaymentForm
+        supplierPaymentEntry ? <SupplierPaymentForm
           supplierOptions={buildNameOptions(supplierNames?.data)}
           onClose={() => setSupplierPaymentEntry(undefined)}
           onSave={(body) =>
@@ -358,7 +358,9 @@ export function Payments() {
               .unwrap()
               .then(() => setSupplierPaymentEntry(undefined))
           }
-        />
+        /> : <BulkPaymentForm party="supplier" onClose={() => setSupplierPaymentEntry(undefined)} onSaveBulk={async entries => {
+          await store.dispatch(api.endpoints.bulkSupplierPayments.initiate(entries)).unwrap();
+        }} />
       )}
 
       {/* ================= PARTITION: Bank Deposits ================= */}

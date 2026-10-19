@@ -1,3 +1,4 @@
+import { Dropdown } from "../components/Dropdown";
 import { weightResult } from "../lib/weight";
 import { store } from "../app/store";
 import { api } from "../app/api";
@@ -280,7 +281,7 @@ function SaleForm({
     >
       <form className="grid gap-4" onSubmit={submit}>
         <Field label="Customer Name" required error={errors.customerName}>
-          <select
+          <Dropdown
             className="input"
             value={
               names?.data.some((n: any) => n.name === body.customerName)
@@ -301,7 +302,7 @@ function SaleForm({
               </option>
             ))}
             <option value="__new">+ New customer</option>
-          </select>
+          </Dropdown>
         </Field>
         {(!names?.data.some((n: any) => n.name === body.customerName) ||
           !body.customerName) && (
@@ -319,7 +320,7 @@ function SaleForm({
           required
           error={errors.supplierName}
         >
-          <select
+          <Dropdown
             className="input"
             value={body.supplierId}
             onChange={(e) => {
@@ -339,7 +340,7 @@ function SaleForm({
                 {s.supplierName} ({s.totalIn} kg in)
               </option>
             ))}
-          </select>
+          </Dropdown>
         </Field>
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Total Kg" required error={errors.totalKg}>

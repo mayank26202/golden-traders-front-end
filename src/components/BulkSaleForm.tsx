@@ -1,3 +1,5 @@
+import { useBulkKeyboard } from "./useBulkKeyboard";
+import { Dropdown } from "./Dropdown";
 import { weightResult } from "../lib/weight";
 import { useState } from "react";
 import { Plus, Trash2, CheckCircle2 } from "lucide-react";
@@ -26,18 +28,12 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
   const startingStock = availableSupplier?.stockBalance ?? availableSupplier?.totalIn ?? 0;
   const remainingKg = Math.round((startingStock - totalKgSold) * 100) / 100;
 
-  const handleAdd = () => setRows([...rows, { id: Date.now(), customerName: "", kg: "", rate: "" }]);
+  const { handleAdd, handleKeyDown } = useBulkKeyboard(rows, setRows, { customerName: "", kg: "", rate: "" });
   const handleRemove = (id: number) => setRows(rows.filter(r => r.id !== id));
   const updateRow = (id: number, field: string, value: string) => {
     setRows(rows.map(r => r.id === id ? { ...r, [field]: value } : r));
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, id: number) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAdd();
-    }
-  };
 
   const handleNext = () => {
     if (!saleDate || !supplierId || !rows.length || rows.some(r => !r.customerName || !r.kg)) return alert("Please fill all required fields");
@@ -108,7 +104,7 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
           <TextInput type="date" value={saleDate} onChange={(e) => setSaleDate(e.target.value)} />
         </Field>
         <Field label="Deduct from Supplier" required>
-          <select className="input" value={supplierId} onChange={(e) => {
+          <Dropdown className="input" value={supplierId} onChange={(e) => {
             const s = available?.data?.find((x: any) => x.supplierId === e.target.value);
             setSupplierId(e.target.value);
             setSupplierName(s?.supplierName || "");
@@ -117,7 +113,7 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
             {available?.data?.map((s: any) => (
               <option key={s.supplierId} value={s.supplierId}>{s.supplierName} ({(s.stockBalance ?? s.totalIn)} kg in)</option>
             ))}
-          </select>
+          </Dropdown>
         </Field>
       </div>
 
@@ -125,7 +121,7 @@ export function BulkSaleForm({ onClose, onSaveBulk }: { onClose: () => void, onS
         {rows.map((r, i) => (
           <div key={r.id} className="grid grid-cols-[1fr_80px_80px_40px] gap-2 mb-2 items-end">
             <Field label={i === 0 ? "Customer Name" : ""}>
-              <TextInput list="cust-list" placeholder="Customer" value={r.customerName} onChange={e => updateRow(r.id, "customerName", e.target.value)} onKeyDown={(e) => handleKeyDown(e, r.id)} />
+              <TextInput list="cust-list" placeholder="Customer" id={`bulk-name-${r.id}`} value={r.customerName} onChange={e => updateRow(r.id, "customerName", e.target.value)} onKeyDown={(e) => handleKeyDown(e, r.id)} />
             </Field>
             <Field label={i === 0 ? "Kg" : ""}>
               <TextInput inputMode="decimal" placeholder="Kg" value={r.kg} onChange={e => updateRow(r.id, "kg", e.target.value)} onKeyDown={(e) => handleKeyDown(e, r.id)} />

@@ -1,3 +1,4 @@
+import { Dropdown } from "../components/Dropdown";
 import { useState } from "react";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -11,7 +12,6 @@ import {
   useExpensesQuery,
   useUpdateExpenseMutation,
   usePartyNamesQuery,
-  useVehiclesQuery,
 } from "../app/api";
 import {
   Field,
@@ -48,9 +48,6 @@ export function Expenses() {
   // console.log("supplierNames", supplierNames);
   const { data } = useExpensesQuery(`?${q}`);
   const { data: history } = useExpenseHistoryQuery();
-  const { data: vehicles } = useVehiclesQuery(undefined, {
-    skip: !can(user, "expenses:create"),
-  });
   const [create] = useCreateExpenseMutation();
   const [update] = useUpdateExpenseMutation();
   const [remove] = useDeleteExpenseMutation();
@@ -94,7 +91,7 @@ export function Expenses() {
       <div className="mb-4 flex flex-col gap-3 rounded-xl bg-white p-3 shadow-sm sm:flex-row sm:items-center">
         {/* Expense Type */}
         <div className="shrink-0">
-          <select
+          <Dropdown
             className="input w-full sm:w-54"
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
@@ -104,7 +101,7 @@ export function Expenses() {
             <option value="salary">Salary / Bonus</option>
             <option value="emi">EMI Paid</option>
             <option value="vehicle">Gaadi Expense</option>
-          </select>
+          </Dropdown>
         </div>
         {/* Search / Filters */}
         <div className="min-w-0 flex-1">
@@ -263,7 +260,6 @@ export function Expenses() {
       {editing !== undefined && (
         <ExpenseForm
           entry={editing || undefined}
-          vehicles={vehicles?.data || []}
           onClose={() => setEditing(undefined)}
           onSave={save}
         />
@@ -274,12 +270,10 @@ export function Expenses() {
 
 function ExpenseForm({
   entry,
-  vehicles,
   onClose,
   onSave,
 }: {
   entry?: Expense;
-  vehicles: any[];
   onClose: () => void;
   onSave: (body: any) => Promise<unknown>;
 }) {
@@ -300,16 +294,6 @@ function ExpenseForm({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const set = (k: string, v: any) => setBody({ ...body, [k]: v });
-  const pickVehicle = (vehicleNumber: string) => {
-    const vehicle = vehicles.find(
-      (v: any) => v.vehicleNumber === vehicleNumber,
-    );
-    setBody({
-      ...body,
-      vehicleNumber,
-      driverName: vehicle?.driverName || body.driverName,
-    });
-  };
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const keys = [
@@ -370,17 +354,7 @@ function ExpenseForm({
         {body.type === "vehicle" && (
           <>
             <Field label="Gaadi Number" required error={errors.vehicleNumber}>
-              <SelectInput
-                value={body.vehicleNumber}
-                onChange={(e) => pickVehicle(e.target.value)}
-              >
-                <option value="">Select gaadi</option>
-                {vehicles.map((v: any) => (
-                  <option key={v._id} value={v.vehicleNumber}>
-                    {v.vehicleNumber} - {v.driverName}
-                  </option>
-                ))}
-              </SelectInput>
+              <TextInput placeholder="Enter gaadi number" value={body.vehicleNumber} onChange={e => set("vehicleNumber", e.target.value.toUpperCase())} />
             </Field>
             <Field label="Driver Name">
               <TextInput

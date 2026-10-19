@@ -23,6 +23,7 @@ input, select, button { font: inherit; }
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
   --canvas: #f4f6fb;
   --surface: #ffffff;
   --surface-muted: #f8fafc;
@@ -31,6 +32,13 @@ input, select, button { font: inherit; }
   --line: #e4e8f0;
   --line-strong: #d7dce6;
 }
+
+.app-select { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; background: #fff; color: #131a2b; }
+.app-options { position: fixed; z-index: 100; overflow: auto; overscroll-behavior: contain; padding: 4px; border: 1px solid #d7dce6; border-radius: 8px; background: #fff; color: #131a2b; box-shadow: 0 8px 24px #131a2b26; color-scheme: light; }
+.app-option { padding: 8px 12px; min-height: 36px; cursor: pointer; border-radius: 5px; overflow-wrap: anywhere; }
+.app-option[aria-selected="true"] { background: #e7f6f0; color: #08785c; }
+.app-option[data-active="true"], .app-option:hover { background: #13a47f; color: #fff; }
+.app-option[aria-disabled="true"] { opacity: .45; cursor: default; }
 
 * {
   scrollbar-width: thin;

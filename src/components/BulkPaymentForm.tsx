@@ -1,3 +1,5 @@
+import { useBulkKeyboard } from "./useBulkKeyboard";
+import { Dropdown } from "./Dropdown";
 import { useState } from "react";
 import { Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { Modal } from "./Modal";
@@ -5,24 +7,24 @@ import { Field, TextInput } from "./FormField";
 import { usePartyNamesQuery } from "../app/api";
 import { toDateInput } from "../lib/auth";
 
-export function BulkPaymentForm({ onClose, onSaveBulk }: { onClose: () => void, onSaveBulk: (entries: any[]) => Promise<void> }) {
+export function BulkPaymentForm({ onClose, onSaveBulk, party = "customer" }: { party?: "customer" | "supplier"; onClose: () => void, onSaveBulk: (entries: any[]) => Promise<void> }) {
   const [paymentDate, setPaymentDate] = useState(toDateInput(new Date().toISOString()));
   const [method, setMethod] = useState("cash");
   const [rows, setRows] = useState<any[]>([{ id: 1, customerName: "", amount: "", note: "" }]);
   const [preview, setPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { data: names } = usePartyNamesQuery("?type=customer");
+  const { data: names } = usePartyNamesQuery(`?type=${party}`);
   const totalAmount = rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
-  const handleAdd = () => setRows([...rows, { id: Date.now(), customerName: "", amount: "", note: "" }]);
+  const { handleAdd, handleKeyDown } = useBulkKeyboard(rows, setRows, { customerName: "", amount: "", note: "" });
   const handleRemove = (id: number) => setRows(rows.filter(r => r.id !== id));
   const updateRow = (id: number, field: string, value: string) => {
     setRows(rows.map(r => r.id === id ? { ...r, [field]: value } : r));
   };
 
   const handleNext = () => {
-    if (!rows.length || rows.some(r => !r.customerName || !r.amount)) return alert("Please fill all required fields");
+    if (!paymentDate || !rows.length || rows.some(r => !r.customerName.trim() || !Number.isFinite(Number(r.amount)) || Number(r.amount) <= 0)) return alert("Please fill all required fields");
     setPreview(true);
   };
 
@@ -30,7 +32,7 @@ export function BulkPaymentForm({ onClose, onSaveBulk }: { onClose: () => void, 
     setIsSaving(true);
     const time = new Date().toTimeString().slice(0, 5);
     const entries = rows.map(r => ({
-      customerName: r.customerName.trim(),
+      [party === "supplier" ? "supplierName" : "customerName"]: r.customerName.trim(),
       amount: Number(r.amount) || 0,
       method,
       paymentDate,
@@ -49,14 +51,14 @@ export function BulkPaymentForm({ onClose, onSaveBulk }: { onClose: () => void, 
 
   if (preview) {
     return (
-      <Modal title="Preview Bulk Payments" onClose={onClose}>
+      <Modal title={`Preview Bulk ${party === "supplier" ? "Supplier" : "Customer"} Payments`} onClose={onClose}>
         <div className="mb-4 text-sm">
           <p><strong>Date:</strong> {paymentDate}</p>
           <p><strong>Method:</strong> {method}</p>
         </div>
         <div className="max-h-[45dvh] overflow-auto overscroll-contain mb-4"><table className="w-full text-sm">
           <thead className="bg-slate-100">
-            <tr><th className="p-2 text-left">Customer</th><th className="p-2">Amount</th><th className="p-2 text-left">Note</th></tr>
+            <tr><th className="p-2 text-left">{party === "supplier" ? "Supplier" : "Customer"}</th><th className="p-2">Amount</th><th className="p-2 text-left">Note</th></tr>
           </thead>
           <tbody>
             {rows.map((r, i) => (
@@ -82,33 +84,33 @@ export function BulkPaymentForm({ onClose, onSaveBulk }: { onClose: () => void, 
   }
 
   return (
-    <Modal title="Bulk Customer Payments" onClose={onClose}>
+    <Modal title={`Bulk ${party === "supplier" ? "Supplier" : "Customer"} Payments`} onClose={onClose}>
       <div className="grid gap-4 md:grid-cols-2 mb-4">
         <Field label="Payment Date" required>
           <TextInput type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
         </Field>
         <Field label="Payment Method" required>
-          <select className="input" value={method} onChange={(e) => setMethod(e.target.value)}>
+          <Dropdown className="input" value={method} onChange={(e) => setMethod(e.target.value)}>
             <option value="cash">Cash</option>
             <option value="upi">UPI</option>
             <option value="bank">Bank</option>
             <option value="SK">SK</option>
             <option value="golden_traders_bank">Golden Trader's Bank</option>
-          </select>
+          </Dropdown>
         </Field>
       </div>
 
       <div className="max-h-[40dvh] overflow-auto overscroll-contain mb-4 border rounded p-2 bg-slate-50">
         {rows.map((r, i) => (
           <div key={r.id} className="grid grid-cols-[1fr_100px_1fr_40px] gap-2 mb-2 items-end">
-            <Field label={i === 0 ? "Customer Name" : ""}>
-              <TextInput list="pay-cust-list" placeholder="Customer" value={r.customerName} onChange={e => updateRow(r.id, "customerName", e.target.value)} />
+            <Field label={i === 0 ? `${party === "supplier" ? "Supplier" : "Customer"} Name` : ""}>
+              <TextInput list="pay-cust-list" placeholder={party === "supplier" ? "Supplier" : "Customer"} id={`bulk-name-${r.id}`} value={r.customerName} onChange={e => updateRow(r.id, "customerName", e.target.value)} onKeyDown={(e) => handleKeyDown(e, r.id)} />
             </Field>
             <Field label={i === 0 ? "Amount" : ""}>
-              <TextInput inputMode="decimal" placeholder="Amount" value={r.amount} onChange={e => updateRow(r.id, "amount", e.target.value)} />
+              <TextInput inputMode="decimal" placeholder="Amount" value={r.amount} onChange={e => updateRow(r.id, "amount", e.target.value)} onKeyDown={(e) => handleKeyDown(e, r.id)} />
             </Field>
             <Field label={i === 0 ? "Note" : ""}>
-              <TextInput placeholder="Note" value={r.note} onChange={e => updateRow(r.id, "note", e.target.value)} />
+              <TextInput placeholder="Note" value={r.note} onChange={e => updateRow(r.id, "note", e.target.value)} onKeyDown={(e) => handleKeyDown(e, r.id)} />
             </Field>
             <button className="h-11 w-full flex items-center justify-center text-red-500 hover:bg-red-50 rounded" onClick={() => handleRemove(r.id)}><Trash2 size={16} /></button>
           </div>

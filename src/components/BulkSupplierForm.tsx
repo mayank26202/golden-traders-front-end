@@ -1,3 +1,4 @@
+import { useBulkKeyboard } from "./useBulkKeyboard";
 import { useState } from "react";
 import { Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { Modal } from "./Modal";
@@ -16,18 +17,12 @@ export function BulkSupplierForm({ onClose, onSaveBulk }: { onClose: () => void,
   const totalKg = Math.round(rows.reduce((sum, r) => sum + (Number(r.kgWeight) || 0), 0) * 100) / 100;
   const totalAmount = Math.round(rows.reduce((sum, r) => sum + ((Number(r.kgWeight) || 0) * (Number(r.ratePerKg) || 0)), 0) * 100) / 100;
 
-  const handleAdd = () => setRows([...rows, { id: Date.now(), supplierName: "", kgWeight: "", ratePerKg: "" }]);
+  const { handleAdd, handleKeyDown } = useBulkKeyboard(rows, setRows, { supplierName: "", kgWeight: "", ratePerKg: "" });
   const handleRemove = (id: number) => setRows(rows.filter(r => r.id !== id));
   const updateRow = (id: number, field: string, value: string) => {
     setRows(rows.map(r => r.id === id ? { ...r, [field]: value } : r));
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, id: number) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAdd();
-    }
-  };
 
   const handleNext = () => {
     if (!rows.length || rows.some(r => !r.supplierName || !r.kgWeight)) return alert("Please fill all required fields");
@@ -99,7 +94,7 @@ export function BulkSupplierForm({ onClose, onSaveBulk }: { onClose: () => void,
         {rows.map((r, i) => (
           <div key={r.id} className="grid grid-cols-[1fr_80px_80px_40px] gap-2 mb-2 items-end">
             <Field label={i === 0 ? "Supplier Name" : ""}>
-              <TextInput list="supp-list" placeholder="Supplier" value={r.supplierName} onChange={e => updateRow(r.id, "supplierName", e.target.value)} onKeyDown={(e) => handleKeyDown(e, r.id)} />
+              <TextInput list="supp-list" placeholder="Supplier" id={`bulk-name-${r.id}`} value={r.supplierName} onChange={e => updateRow(r.id, "supplierName", e.target.value)} onKeyDown={(e) => handleKeyDown(e, r.id)} />
             </Field>
             <Field label={i === 0 ? "Kg Weight" : ""}>
               <TextInput inputMode="decimal" placeholder="Kg" value={r.kgWeight} onChange={e => updateRow(r.id, "kgWeight", e.target.value)} onKeyDown={(e) => handleKeyDown(e, r.id)} />
